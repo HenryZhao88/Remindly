@@ -27,6 +27,7 @@ final class Reminder {
             return config
         }
         set {
+            // CustomUrgencyConfig only contains Bool fields so encoding cannot fail.
             customConfigData = try? JSONEncoder().encode(newValue)
         }
     }

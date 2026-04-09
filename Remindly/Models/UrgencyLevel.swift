@@ -15,8 +15,8 @@ enum UrgencyLevel: String, Codable, CaseIterable, Identifiable {
         case .none:    return [0]
         case .low:     return [-3600, 0]
         case .meeting: return [-1800, -600, 0]
-        case .high:    return []   // spam handled separately
-        case .custom:  return []   // handled by CustomUrgencyConfig
+        case .high:    return []   // intentionally empty — NotificationService schedules spam bursts directly, not via leadOffsets
+        case .custom:  return []   // intentionally empty — NotificationService reads CustomUrgencyConfig.leadOffsets instead
         }
     }
 
