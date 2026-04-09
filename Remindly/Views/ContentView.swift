@@ -44,12 +44,6 @@ struct ReminderListView: View {
     var body: some View { Text("List").navigationTitle("Reminders") }
 }
 
-struct ReminderFormView: View {
-    var editingReminder: Reminder?
-    var onSave: (() -> Void)? = nil
-    var body: some View { Text("Add Reminder") }
-}
-
 struct SettingsView: View {
     var body: some View { Text("Settings").navigationTitle("Settings") }
 }
