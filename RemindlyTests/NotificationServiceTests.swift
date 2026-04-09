@@ -43,6 +43,7 @@ final class NotificationServiceTests: XCTestCase {
         service.backgroundRefreshScheduler = {}
     }
 
+    // 7200s ensures the low-urgency -3600s offset resolves to a future date with safe margin during tests
     func makeReminder(urgency: UrgencyLevel, secondsFromNow: TimeInterval = 7200) -> Reminder {
         Reminder(title: "Test", date: Date().addingTimeInterval(secondsFromNow), urgency: urgency)
     }

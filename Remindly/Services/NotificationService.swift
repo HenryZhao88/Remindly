@@ -53,6 +53,7 @@ final class NotificationService {
 
     // MARK: - Cancel
 
+    /// `completion` is always dispatched to the main queue.
     func cancelNotifications(for reminder: Reminder, completion: (() -> Void)? = nil) {
         let prefix = reminder.id.uuidString
         center.getPendingNotificationRequests { requests in
@@ -75,7 +76,7 @@ final class NotificationService {
                 $0.identifier.hasPrefix(prefix) && $0.identifier.contains("-spam-")
             }
             if spamPending.count < 10 {
-                self.addSpamBurst(reminder: reminder, startOffset: 1)
+                self.addSpamBurst(reminder: reminder, startOffset: 1 as Int)
             }
         }
     }
@@ -116,7 +117,7 @@ final class NotificationService {
         center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger), withCompletionHandler: nil)
     }
 
-    private func addSpamBurst(reminder: Reminder, startOffset: TimeInterval) {
+    private func addSpamBurst(reminder: Reminder, startOffset: Int) {
         let content = UNMutableNotificationContent()
         content.title = reminder.title
         content.body = "Tap to stop"
@@ -124,12 +125,12 @@ final class NotificationService {
         content.categoryIdentifier = "HIGH_URGENCY"
 
         for i in 0..<Self.spamBurstCount {
-            let fireDate = reminder.date.addingTimeInterval(startOffset + TimeInterval(i))
+            let fireDate = reminder.date.addingTimeInterval(TimeInterval(startOffset) + TimeInterval(i))
             guard fireDate > Date() else { continue }
             let components = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute, .second], from: fireDate)
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-            let id = "\(reminder.id.uuidString)-spam-\(i)-\(Int(startOffset))"
+            let id = "\(reminder.id.uuidString)-spam-\(i)-\(startOffset)"
             center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger), withCompletionHandler: nil)
         }
     }
