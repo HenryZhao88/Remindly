@@ -36,10 +36,6 @@ struct ContentView: View {
 
 // MARK: - Temporary stubs (replaced in later tasks)
 
-struct CalendarTabView: View {
-    var body: some View { Text("Calendar").navigationTitle("Calendar") }
-}
-
 struct SettingsView: View {
     var body: some View { Text("Settings").navigationTitle("Settings") }
 }
