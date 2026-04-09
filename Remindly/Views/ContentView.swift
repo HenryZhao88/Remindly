@@ -33,30 +33,3 @@ struct ContentView: View {
         }
     }
 }
-
-// MARK: - Temporary stubs (replaced in later tasks)
-
-struct ActiveAlertsView: View {
-    var body: some View { Text("Active Alerts") }
-}
-
-extension View {
-    func spamBanner() -> some View { self }
-}
-
-// Placeholder — implemented in Task 12
-final class RemindlyNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
-    var modelContext: ModelContext?
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                 willPresent notification: UNNotification,
-                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .sound, .badge])
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                 didReceive response: UNNotificationResponse,
-                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        completionHandler()
-    }
-}
