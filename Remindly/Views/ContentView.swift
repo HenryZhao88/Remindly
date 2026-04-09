@@ -40,10 +40,6 @@ struct CalendarTabView: View {
     var body: some View { Text("Calendar").navigationTitle("Calendar") }
 }
 
-struct ReminderListView: View {
-    var body: some View { Text("List").navigationTitle("Reminders") }
-}
-
 struct SettingsView: View {
     var body: some View { Text("Settings").navigationTitle("Settings") }
 }
