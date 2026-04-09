@@ -36,10 +36,6 @@ struct ContentView: View {
 
 // MARK: - Temporary stubs (replaced in later tasks)
 
-struct SettingsView: View {
-    var body: some View { Text("Settings").navigationTitle("Settings") }
-}
-
 struct ActiveAlertsView: View {
     var body: some View { Text("Active Alerts") }
 }
