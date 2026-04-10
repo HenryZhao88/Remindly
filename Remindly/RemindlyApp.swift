@@ -43,7 +43,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Register background refresh task
         BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "com.remindly.app.spamRefresh",
+            forTaskWithIdentifier: "com.henremindlyry.app.spamRefresh",
             using: nil) { task in
                 self.handleSpamRefresh(task: task as! BGAppRefreshTask)
             }

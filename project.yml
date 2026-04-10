@@ -1,6 +1,6 @@
 name: Remindly
 options:
-  bundleIdPrefix: com.remindly
+  bundleIdPrefix: com.henremindlyry
   deploymentTarget:
     iOS: "17.0"
   xcodeVersion: "16.0"
@@ -22,7 +22,7 @@ targets:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.remindly.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.henremindlyry.app
         INFOPLIST_FILE: Remindly/Info.plist
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
@@ -34,7 +34,7 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         BGTaskSchedulerPermittedIdentifiers:
-          - com.remindly.app.spamRefresh
+          - com.henremindlyry.app.spamRefresh
         UIBackgroundModes:
           - fetch
     entitlements:

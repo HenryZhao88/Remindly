@@ -91,7 +91,7 @@ final class NotificationService {
             override()
             return
         }
-        let request = BGAppRefreshTaskRequest(identifier: "com.remindly.app.spamRefresh")
+        let request = BGAppRefreshTaskRequest(identifier: "com.henremindlyry.app.spamRefresh")
         request.earliestBeginDate = Date(timeIntervalSinceNow: 50)
         try? BGTaskScheduler.shared.submit(request)
     }
