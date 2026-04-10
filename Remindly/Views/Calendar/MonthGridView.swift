@@ -49,7 +49,7 @@ struct MonthGridView: View {
                     DayCellView(
                         date: date,
                         reminders: date.map { remindersOnDay($0) } ?? [],
-                        isSelected: date.map { selectedDate.map { DateHelpers.isSameDay($0, $1) } ?? false } ?? false
+                        isSelected: date.map { d in selectedDate.map { DateHelpers.isSameDay(d, $0) } ?? false } ?? false
                     )
                     .background(Color(.systemBackground))
                     .onTapGesture {
