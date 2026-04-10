@@ -124,8 +124,10 @@ final class NotificationService {
         content.sound = .default
         content.categoryIdentifier = "HIGH_URGENCY"
 
+        let baseDate = max(Date(), reminder.date)
+
         for i in 0..<Self.spamBurstCount {
-            let fireDate = reminder.date.addingTimeInterval(TimeInterval(startOffset) + TimeInterval(i))
+            let fireDate = baseDate.addingTimeInterval(TimeInterval(startOffset) + TimeInterval(i))
             guard fireDate > Date() else { continue }
             let components = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute, .second], from: fireDate)

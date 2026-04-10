@@ -13,6 +13,8 @@ final class Reminder {
     var notes: String?
     /// True while high-urgency spam notifications are actively firing.
     var isSpamming: Bool
+    /// True if the user has explicitly stopped the high urgency spam for this event.
+    var hasBeenStopped: Bool
 
     var urgency: UrgencyLevel {
         get { UrgencyLevel(rawValue: urgencyRaw) ?? .none }
@@ -38,6 +40,7 @@ final class Reminder {
         self.date = date
         self.urgencyRaw = urgency.rawValue
         self.isSpamming = false
+        self.hasBeenStopped = false
         self.notes = notes
     }
 }

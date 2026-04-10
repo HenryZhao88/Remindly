@@ -98,6 +98,11 @@ struct ReminderFormView: View {
                 r.customConfig = self.customConfig
                 r.notes = self.notes.isEmpty ? nil : self.notes
                 NotificationService.shared.scheduleNotifications(for: r)
+                if self.onSave == nil {
+                    self.resetForm()
+                } else {
+                    self.onSave?()
+                }
             }
         } else {
             let reminder = Reminder(
@@ -108,11 +113,12 @@ struct ReminderFormView: View {
             reminder.customConfig = customConfig
             modelContext.insert(reminder)
             NotificationService.shared.scheduleNotifications(for: reminder)
-        }
-        if onSave == nil {
-            resetForm()
-        } else {
-            onSave?()
+
+            if onSave == nil {
+                resetForm()
+            } else {
+                onSave?()
+            }
         }
     }
 

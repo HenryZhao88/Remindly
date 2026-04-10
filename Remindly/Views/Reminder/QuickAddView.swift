@@ -11,11 +11,10 @@ struct QuickAddView: View {
 
     @State private var title: String = ""
     @State private var selectedTime: Date = Date()
-    @State private var hasSetTime: Bool = false
     @State private var urgency: UrgencyLevel = .none
     @State private var customConfig: CustomUrgencyConfig = CustomUrgencyConfig()
 
-    private var canSave: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty && hasSetTime }
+    private var canSave: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty }
 
     private var combinedDate: Date {
         let cal = Calendar.current
@@ -35,10 +34,6 @@ struct QuickAddView: View {
 
                 HStack {
                     DatePicker("Time", selection: $selectedTime, displayedComponents: .hourAndMinute)
-                        .onChange(of: selectedTime) { _, _ in hasSetTime = true }
-                    if !hasSetTime {
-                        Text("Required").font(.caption).foregroundStyle(.red)
-                    }
                 }
                 .padding(.horizontal)
 

@@ -12,29 +12,33 @@ final class RemindlyNotificationDelegate: NSObject, UNUserNotificationCenterDele
         completionHandler([.banner, .sound, .badge])
     }
 
-    // Handle "Stop" action tap and notification tap (both open Active Alerts)
+    // Handle "Stop" action tap and notification tap
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                  didReceive response: UNNotificationResponse,
                                  withCompletionHandler completionHandler: @escaping () -> Void) {
         let identifier = response.notification.request.identifier
-        // Extract reminder UUID prefix (first 5 UUID components before any "-spam-" or offset suffix)
         let uuidString = identifier.components(separatedBy: "-spam-").first?
                                    .components(separatedBy: "-").prefix(5)
                                    .joined(separator: "-") ?? ""
+        let isStopAction = response.actionIdentifier == "STOP_SPAM"
 
-        if let context = modelContext, let uuid = UUID(uuidString: uuidString) {
-            markReminderSpamming(uuid: uuid, context: context)
+        Task { @MainActor in
+            if let context = self.modelContext, let uuid = UUID(uuidString: uuidString) {
+                let descriptor = FetchDescriptor<Reminder>(predicate: #Predicate { $0.id == uuid })
+                if let reminder = try? context.fetch(descriptor).first {
+                    if isStopAction {
+                        reminder.isSpamming = false
+                        reminder.hasBeenStopped = true
+                        NotificationService.shared.cancelNotifications(for: reminder)
+                    } else {
+                        reminder.isSpamming = true
+                        NotificationCenter.default.post(name: .showActiveAlerts, object: nil)
+                    }
+                    try? context.save()
+                }
+            }
+            completionHandler()
         }
-
-        NotificationCenter.default.post(name: .showActiveAlerts, object: nil)
-        completionHandler()
-    }
-
-    private func markReminderSpamming(uuid: UUID, context: ModelContext) {
-        let descriptor = FetchDescriptor<Reminder>(predicate: #Predicate { $0.id == uuid })
-        guard let reminder = try? context.fetch(descriptor).first else { return }
-        reminder.isSpamming = true
-        try? context.save()
     }
 }
 

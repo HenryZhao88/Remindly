@@ -51,16 +51,28 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     private func handleSpamRefresh(task: BGAppRefreshTask) {
-        guard let context = notificationDelegate.modelContext else {
-            task.setTaskCompleted(success: false)
-            return
+        Task { @MainActor in
+            guard let context = self.notificationDelegate.modelContext else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            let now = Date()
+            let descriptor = FetchDescriptor<Reminder>()
+            let allReminders = (try? context.fetch(descriptor)) ?? []
+
+            var scheduledAny = false
+            for reminder in allReminders {
+                let needsSpam = reminder.urgency == .high || (reminder.urgency == .custom && reminder.customConfig.spamAtEventTime)
+                if needsSpam && reminder.date <= now && !reminder.hasBeenStopped {
+                    reminder.isSpamming = true
+                    NotificationService.shared.rescheduleSpamIfNeeded(for: reminder)
+                    scheduledAny = true
+                }
+            }
+            if scheduledAny {
+                NotificationService.shared.scheduleBackgroundRefresh()
+            }
+            task.setTaskCompleted(success: true)
         }
-        let descriptor = FetchDescriptor<Reminder>(predicate: #Predicate { $0.isSpamming })
-        let spamming = (try? context.fetch(descriptor)) ?? []
-        for reminder in spamming {
-            NotificationService.shared.rescheduleSpamIfNeeded(for: reminder)
-            NotificationService.shared.scheduleBackgroundRefresh()
-        }
-        task.setTaskCompleted(success: true)
     }
 }
