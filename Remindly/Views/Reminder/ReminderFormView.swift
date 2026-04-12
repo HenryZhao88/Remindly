@@ -4,10 +4,11 @@ import SwiftData
 struct ReminderFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var settings: AppSettings
+    @Environment(\.dismiss) private var dismiss
 
     /// Non-nil when editing an existing reminder.
     var editingReminder: Reminder?
-    /// Called after a successful save. Used when embedded in a sheet.
+    /// Called after a successful save or delete. Used when embedded in a sheet.
     var onSave: (() -> Void)? = nil
 
     // MARK: Form state
@@ -60,6 +61,15 @@ struct ReminderFormView: View {
                     Button("Save Reminder") { save() }
                         .frame(maxWidth: .infinity)
                         .disabled(!canSave)
+                }
+
+                if editingReminder != nil {
+                    Section {
+                        Button("Delete Reminder", role: .destructive) {
+                            deleteReminder()
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -119,6 +129,19 @@ struct ReminderFormView: View {
             } else {
                 onSave?()
             }
+        }
+    }
+
+    private func deleteReminder() {
+        guard let r = editingReminder else { return }
+        // Fire-and-forget: cancelNotifications captures the ID strings before delete runs,
+        // so the async completion is safe even after the model object is removed.
+        NotificationService.shared.cancelNotifications(for: r)
+        modelContext.delete(r)
+        if onSave != nil {
+            onSave?()
+        } else {
+            dismiss()
         }
     }
 

@@ -3,11 +3,13 @@ import SwiftData
 
 struct DayPopupView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var settings: AppSettings
     @Query(sort: \Reminder.date) private var allReminders: [Reminder]
 
     let date: Date
     @State private var showingQuickAdd = false
+    @State private var editingReminder: Reminder? = nil
 
     private var reminders: [Reminder] {
         allReminders.filter { DateHelpers.isSameDay($0.date, date) }
@@ -30,6 +32,18 @@ struct DayPopupView: View {
                             Text(reminder.date.formatted(date: .omitted, time: .shortened))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture { editingReminder = reminder }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                deleteReminder(reminder)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
                 }
@@ -49,8 +63,16 @@ struct DayPopupView: View {
             .sheet(isPresented: $showingQuickAdd) {
                 QuickAddView(prefilledDate: date)
             }
+            .sheet(item: $editingReminder) { reminder in
+                ReminderFormView(editingReminder: reminder, onSave: { editingReminder = nil })
+            }
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+
+    private func deleteReminder(_ reminder: Reminder) {
+        NotificationService.shared.cancelNotifications(for: reminder)
+        modelContext.delete(reminder)
     }
 }

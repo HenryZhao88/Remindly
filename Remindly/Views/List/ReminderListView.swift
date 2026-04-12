@@ -5,61 +5,96 @@ struct ReminderListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Reminder.date, order: .forward) private var reminders: [Reminder]
     @State private var editingReminder: Reminder? = nil
+    @State private var selectedTab = 0
 
-    private var upcomingReminders: [Reminder] {
-        reminders.filter { $0.date >= Date() || $0.isSpamming }
+    private var activeReminders: [Reminder] {
+        let now = Date()
+        return reminders.filter { $0.date >= now || $0.isSpamming }
     }
 
-    private var grouped: [(String, [Reminder])] {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        var dict: [Date: [Reminder]] = [:]
-        for r in upcomingReminders {
-            let key = cal.startOfDay(for: r.date)
-            dict[key, default: []].append(r)
-        }
-        return dict.keys.sorted().map { key in
-            let label: String
-            if cal.isDate(key, inSameDayAs: today) {
-                label = "Today — " + key.formatted(.dateTime.month(.abbreviated).day())
-            } else {
-                label = key.formatted(.dateTime.month(.abbreviated).day())
-            }
-            return (label, dict[key]!)
-        }
+    private var pastReminders: [Reminder] {
+        let now = Date()
+        return Array(reminders.filter { $0.date < now && !$0.isSpamming }.reversed())
     }
 
     var body: some View {
         NavigationStack {
-            Group {
-                if upcomingReminders.isEmpty {
-                    ContentUnavailableView("No Reminders", systemImage: "bell.slash",
-                                          description: Text("Add a reminder from the + tab."))
+            VStack(spacing: 0) {
+                Picker("", selection: $selectedTab) {
+                    Text("Active").tag(0)
+                    Text("Past").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+
+                if selectedTab == 0 {
+                    activeTabContent
                 } else {
-                    List {
-                        ForEach(grouped, id: \.0) { header, items in
-                            Section(header) {
-                                ForEach(items) { reminder in
-                                    ReminderRowView(reminder: reminder)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { editingReminder = reminder }
-                                        .swipeActions(edge: .trailing) {
-                                            Button(role: .destructive) {
-                                                delete(reminder)
-                                            } label: {
-                                                Label("Delete", systemImage: "trash")
-                                            }
-                                        }
-                                }
-                            }
-                        }
-                    }
+                    pastTabContent
                 }
             }
             .navigationTitle("Reminders")
             .sheet(item: $editingReminder) { reminder in
                 ReminderFormView(editingReminder: reminder, onSave: { editingReminder = nil })
             }
+        }
+    }
+
+    @ViewBuilder
+    private var activeTabContent: some View {
+        if activeReminders.isEmpty {
+            ContentUnavailableView(
+                "No Upcoming Reminders",
+                systemImage: "bell.slash",
+                description: Text("Add a reminder from the + tab.")
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            List {
+                ForEach(activeReminders) { reminder in
+                    ReminderRowView(reminder: reminder)
+                        .contentShape(Rectangle())
+                        .onTapGesture { editingReminder = reminder }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                delete(reminder)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                }
+            }
+            .listStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private var pastTabContent: some View {
+        if pastReminders.isEmpty {
+            ContentUnavailableView(
+                "No Past Reminders",
+                systemImage: "clock",
+                description: Text("Past reminders will appear here.")
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            List {
+                ForEach(pastReminders) { reminder in
+                    ReminderRowView(reminder: reminder)
+                        .opacity(0.55)
+                        .contentShape(Rectangle())
+                        .onTapGesture { editingReminder = reminder }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                delete(reminder)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                }
+            }
+            .listStyle(.plain)
         }
     }
 
