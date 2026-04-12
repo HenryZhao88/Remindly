@@ -7,7 +7,7 @@ struct ReminderListView: View {
     @State private var editingReminder: Reminder? = nil
 
     private var upcomingReminders: [Reminder] {
-        reminders.filter { $0.date >= Date() }
+        reminders.filter { $0.date >= Date() || $0.isSpamming }
     }
 
     private var grouped: [(String, [Reminder])] {
