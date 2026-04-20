@@ -15,7 +15,7 @@ final class NotificationService {
     // MARK: - Permissions
 
     /// Maximum duration (in seconds) that spam notifications will keep firing before auto-expiring.
-    static let maxSpamDuration: TimeInterval = 600 // 10 minutes
+    static let maxSpamDuration: TimeInterval = 1800 // 30 minutes
 
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
