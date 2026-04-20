@@ -101,18 +101,26 @@ struct ReminderFormView: View {
 
     private func save() {
         if let r = editingReminder {
-            NotificationService.shared.cancelNotifications(for: r) {
-                r.title = self.title
-                r.date = self.combinedDate
-                r.urgency = self.urgency
-                r.customConfig = self.customConfig
-                r.notes = self.notes.isEmpty ? nil : self.notes
-                NotificationService.shared.scheduleNotifications(for: r)
-                if self.onSave == nil {
-                    self.resetForm()
-                } else {
-                    self.onSave?()
-                }
+            // Bug 2 fix: don't double-cancel — scheduleNotifications already cancels internally
+            r.title = self.title
+            r.date = self.combinedDate
+            r.urgency = self.urgency
+            r.customConfig = self.customConfig
+            r.notes = self.notes.isEmpty ? nil : self.notes
+            r.isSpamming = false
+            r.hasBeenStopped = false
+            NotificationService.shared.scheduleNotifications(for: r)
+
+            // Bug 4 fix: set isSpamming if spam should already be active
+            let needsSpam = r.urgency == .high || (r.urgency == .custom && r.customConfig.spamAtEventTime)
+            if needsSpam && r.date <= Date() {
+                r.isSpamming = true
+            }
+
+            if self.onSave == nil {
+                self.resetForm()
+            } else {
+                self.onSave?()
             }
         } else {
             let reminder = Reminder(
@@ -123,6 +131,12 @@ struct ReminderFormView: View {
             reminder.customConfig = customConfig
             modelContext.insert(reminder)
             NotificationService.shared.scheduleNotifications(for: reminder)
+
+            // Bug 4 fix: set isSpamming if spam should already be active
+            let needsSpam = reminder.urgency == .high || (reminder.urgency == .custom && reminder.customConfig.spamAtEventTime)
+            if needsSpam && reminder.date <= Date() {
+                reminder.isSpamming = true
+            }
 
             if onSave == nil {
                 resetForm()

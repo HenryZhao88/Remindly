@@ -45,6 +45,13 @@ struct QuickAddView: View {
                     reminder.customConfig = customConfig
                     modelContext.insert(reminder)
                     NotificationService.shared.scheduleNotifications(for: reminder)
+
+                    // Bug 4 fix: set isSpamming if spam should already be active
+                    let needsSpam = reminder.urgency == .high || (reminder.urgency == .custom && reminder.customConfig.spamAtEventTime)
+                    if needsSpam && reminder.date <= Date() {
+                        reminder.isSpamming = true
+                    }
+
                     dismiss()
                 }
                 .buttonStyle(.borderedProminent)

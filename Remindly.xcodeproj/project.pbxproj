@@ -80,7 +80,7 @@
 		DC20E0168B81F29B82D9B37C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		DD34AEA4818F28E46DFB7E48 /* ReminderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRowView.swift; sourceTree = "<group>"; };
 		DE98C7C00952219F89DB064C /* WeekGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekGridView.swift; sourceTree = "<group>"; };
-		EF8CA5C8F246C20361942E53 /* Remindly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Remindly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF8CA5C8F246C20361942E53 /* Remindly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Remindly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1E7735DB9F9F4C926C326CC /* RemindlyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindlyTests.swift; sourceTree = "<group>"; };
 		F37E2476EF9F582EC5E5E3A0 /* NotificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceTests.swift; sourceTree = "<group>"; };
 		FA0C32E210F4C6E2E3FCE93D /* NotificationScheduling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduling.swift; sourceTree = "<group>"; };
@@ -280,6 +280,7 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					11431F88D2AF757288C6ACFF = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -434,7 +435,7 @@
 				CODE_SIGN_ENTITLEMENTS = Remindly/Remindly.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 82G942H4LJ;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Remindly/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -453,7 +454,7 @@
 				CODE_SIGN_ENTITLEMENTS = Remindly/Remindly.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 82G942H4LJ;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Remindly/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

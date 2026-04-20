@@ -32,7 +32,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         let stopAction = UNNotificationAction(
             identifier: "STOP_SPAM",
             title: "Stop",
-            options: [.foreground])
+            options: [.destructive])
         let category = UNNotificationCategory(
             identifier: "HIGH_URGENCY",
             actions: [stopAction],
@@ -64,6 +64,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             for reminder in allReminders {
                 let needsSpam = reminder.urgency == .high || (reminder.urgency == .custom && reminder.customConfig.spamAtEventTime)
                 if needsSpam && reminder.date <= now && !reminder.hasBeenStopped {
+                    // Bug 5 fix: auto-expire spam after maxSpamDuration
+                    if now.timeIntervalSince(reminder.date) > NotificationService.maxSpamDuration {
+                        reminder.isSpamming = false
+                        reminder.hasBeenStopped = true
+                        continue
+                    }
                     reminder.isSpamming = true
                     NotificationService.shared.rescheduleSpamIfNeeded(for: reminder)
                     scheduledAny = true

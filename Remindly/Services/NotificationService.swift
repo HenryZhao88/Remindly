@@ -3,7 +3,7 @@ import BackgroundTasks
 
 final class NotificationService {
     static let shared = NotificationService()
-    /// Number of 1-second-apart notifications scheduled per spam burst.
+    /// Number of notifications scheduled per spam burst (spaced 5 seconds apart).
     static let spamBurstCount = 60
 
     private let center: NotificationScheduling
@@ -13,6 +13,9 @@ final class NotificationService {
     }
 
     // MARK: - Permissions
+
+    /// Maximum duration (in seconds) that spam notifications will keep firing before auto-expiring.
+    static let maxSpamDuration: TimeInterval = 600 // 10 minutes
 
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
@@ -70,6 +73,16 @@ final class NotificationService {
 
     func rescheduleSpamIfNeeded(for reminder: Reminder) {
         guard reminder.isSpamming else { return }
+
+        // Bug 5 fix: auto-expire spam after maxSpamDuration
+        if Date().timeIntervalSince(reminder.date) > Self.maxSpamDuration {
+            DispatchQueue.main.async {
+                reminder.isSpamming = false
+                reminder.hasBeenStopped = true
+            }
+            return
+        }
+
         let prefix = reminder.id.uuidString
         center.getPendingNotificationRequests { pending in
             let spamPending = pending.filter {
@@ -117,18 +130,26 @@ final class NotificationService {
         center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger), withCompletionHandler: nil)
     }
 
-    private func addSpamBurst(reminder: Reminder, startOffset: Int) {
-        let content = UNMutableNotificationContent()
-        content.title = reminder.title
-        content.body = "Tap to stop"
-        content.sound = .default
-        content.categoryIdentifier = "HIGH_URGENCY"
+    /// Interval in seconds between each spam notification. Must be > 1 to avoid
+    /// iOS notification coalescing which suppresses sound/vibration on rapid-fire notifications.
+    private static let spamInterval: TimeInterval = 5
 
+    private func addSpamBurst(reminder: Reminder, startOffset: Int) {
         let baseDate = max(Date(), reminder.date)
 
         for i in 0..<Self.spamBurstCount {
-            let fireDate = baseDate.addingTimeInterval(TimeInterval(startOffset) + TimeInterval(i))
+            // Space each notification by spamInterval seconds so iOS plays sound/vibration for each one
+            let fireDate = baseDate.addingTimeInterval(TimeInterval(startOffset) + TimeInterval(i) * Self.spamInterval)
             guard fireDate > Date() else { continue }
+
+            // Each notification needs its own content object to avoid iOS deduplication
+            let content = UNMutableNotificationContent()
+            content.title = reminder.title
+            content.body = "Tap to stop"
+            content.sound = .default
+            content.categoryIdentifier = "HIGH_URGENCY"
+            content.interruptionLevel = .timeSensitive
+
             let components = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute, .second], from: fireDate)
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)

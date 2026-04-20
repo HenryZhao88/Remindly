@@ -24,6 +24,7 @@ final class AppSettings: ObservableObject {
     }
 
     func setColor(_ color: Color, for urgency: UrgencyLevel) {
+        objectWillChange.send()
         let hex = color.toHex()
         switch urgency {
         case .none:    colorNone    = hex

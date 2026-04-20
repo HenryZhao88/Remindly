@@ -21,6 +21,7 @@ final class RemindlyNotificationDelegate: NSObject, UNUserNotificationCenterDele
                                    .components(separatedBy: "-").prefix(5)
                                    .joined(separator: "-") ?? ""
         let isStopAction = response.actionIdentifier == "STOP_SPAM"
+        let isSpamNotification = identifier.contains("-spam-")
 
         Task { @MainActor in
             if let context = self.modelContext, let uuid = UUID(uuidString: uuidString) {
@@ -30,7 +31,7 @@ final class RemindlyNotificationDelegate: NSObject, UNUserNotificationCenterDele
                         reminder.isSpamming = false
                         reminder.hasBeenStopped = true
                         NotificationService.shared.cancelNotifications(for: reminder)
-                    } else {
+                    } else if isSpamNotification {
                         reminder.isSpamming = true
                         NotificationCenter.default.post(name: .showActiveAlerts, object: nil)
                     }
