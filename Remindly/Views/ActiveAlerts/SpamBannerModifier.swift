@@ -23,16 +23,18 @@ struct SpamBannerModifier: ViewModifier {
                     .background(Color.red)
                     .foregroundStyle(.white)
                 }
-                .sheet(isPresented: $showingAlerts) {
-                    ActiveAlertsView()
-                }
                 .transition(.move(edge: .top))
                 .animation(.easeInOut, value: spammingReminders.isEmpty)
             }
         }
+        .sheet(isPresented: $showingAlerts) {
+            ActiveAlertsView()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showActiveAlerts)) { _ in
+            showingAlerts = true
+        }
     }
 }
-
 extension View {
     func spamBanner() -> some View {
         modifier(SpamBannerModifier())

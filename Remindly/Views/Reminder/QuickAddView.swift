@@ -47,8 +47,7 @@ struct QuickAddView: View {
                     NotificationService.shared.scheduleNotifications(for: reminder)
 
                     // Bug 4 fix: set isSpamming if spam should already be active
-                    let needsSpam = reminder.urgency == .high || (reminder.urgency == .custom && reminder.customConfig.spamAtEventTime)
-                    if needsSpam && reminder.date <= Date() {
+                    if reminder.shouldStartSpammingNow() {
                         reminder.isSpamming = true
                     }
 

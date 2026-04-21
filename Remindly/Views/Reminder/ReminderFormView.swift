@@ -112,8 +112,7 @@ struct ReminderFormView: View {
             NotificationService.shared.scheduleNotifications(for: r)
 
             // Bug 4 fix: set isSpamming if spam should already be active
-            let needsSpam = r.urgency == .high || (r.urgency == .custom && r.customConfig.spamAtEventTime)
-            if needsSpam && r.date <= Date() {
+            if r.shouldStartSpammingNow() {
                 r.isSpamming = true
             }
 
@@ -133,8 +132,7 @@ struct ReminderFormView: View {
             NotificationService.shared.scheduleNotifications(for: reminder)
 
             // Bug 4 fix: set isSpamming if spam should already be active
-            let needsSpam = reminder.urgency == .high || (reminder.urgency == .custom && reminder.customConfig.spamAtEventTime)
-            if needsSpam && reminder.date <= Date() {
+            if reminder.shouldStartSpammingNow() {
                 reminder.isSpamming = true
             }
 

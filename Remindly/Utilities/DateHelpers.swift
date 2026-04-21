@@ -8,8 +8,9 @@ enum DateHelpers {
         guard let firstDay = cal.date(from: cal.dateComponents([.year, .month], from: month)),
               let range = cal.range(of: .day, in: .month, for: month) else { return [] }
 
-        let weekdayOfFirst = cal.component(.weekday, from: firstDay) - 1 // 0 = Sunday
-        var days: [Date?] = Array(repeating: nil, count: weekdayOfFirst)
+        var offsetFromFirstWeekday = cal.component(.weekday, from: firstDay) - cal.firstWeekday
+        if offsetFromFirstWeekday < 0 { offsetFromFirstWeekday += 7 }
+        var days: [Date?] = Array(repeating: nil, count: offsetFromFirstWeekday)
         for offset in 0..<range.count {
             days.append(cal.date(byAdding: .day, value: offset, to: firstDay))
         }
@@ -17,12 +18,11 @@ enum DateHelpers {
         return days
     }
 
-    /// Returns 7 Dates for the week containing `date`, starting Sunday.
+    /// Returns 7 Dates for the week containing `date`, starting according to locale.
     static func weekDays(for date: Date) -> [Date] {
         let cal = Calendar.current
-        let weekday = cal.component(.weekday, from: date) - 1
-        guard let sunday = cal.date(byAdding: .day, value: -weekday, to: date) else { return [] }
-        return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: sunday) }
+        guard let startOfWeek = cal.dateInterval(of: .weekOfYear, for: date)?.start else { return [] }
+        return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: startOfWeek) }
     }
 
     static func isSameDay(_ a: Date, _ b: Date) -> Bool {

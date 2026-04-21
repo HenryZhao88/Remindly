@@ -25,6 +25,7 @@ struct ActiveAlertsView: View {
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.red)
+                            .accessibilityLabel("Stop active alert for \(reminder.title)")
                         }
                     }
                 }

@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		05E71FCC7AED46A16978FEFD /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE39F44461302EEF8CC5D8CB /* AppSettings.swift */; };
-		098582D18436798AC9F0A67B /* RemindlyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E7735DB9F9F4C926C326CC /* RemindlyTests.swift */; };
 		0AE0B5EC152166800ED446D1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F563E3FBFAD7E7940B6352 /* ContentView.swift */; };
 		10F9EC0D2840B0F51229F7D3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 86B23C709BD2C6E545C8762A /* Assets.xcassets */; };
 		2A488FA8B2986F4CB37F10AD /* UrgencyLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BE014930221239B2B2391F /* UrgencyLevel.swift */; };
@@ -81,7 +80,6 @@
 		DD34AEA4818F28E46DFB7E48 /* ReminderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRowView.swift; sourceTree = "<group>"; };
 		DE98C7C00952219F89DB064C /* WeekGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekGridView.swift; sourceTree = "<group>"; };
 		EF8CA5C8F246C20361942E53 /* Remindly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Remindly.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F1E7735DB9F9F4C926C326CC /* RemindlyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindlyTests.swift; sourceTree = "<group>"; };
 		F37E2476EF9F582EC5E5E3A0 /* NotificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceTests.swift; sourceTree = "<group>"; };
 		FA0C32E210F4C6E2E3FCE93D /* NotificationScheduling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduling.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -162,7 +160,6 @@
 			children = (
 				0A116E6E2537AA2AEE278B3B /* CustomUrgencyConfigTests.swift */,
 				F37E2476EF9F582EC5E5E3A0 /* NotificationServiceTests.swift */,
-				F1E7735DB9F9F4C926C326CC /* RemindlyTests.swift */,
 				AB2AF98BABB48B0E3DE65765 /* UrgencyLevelTests.swift */,
 			);
 			path = RemindlyTests;
@@ -354,7 +351,6 @@
 			files = (
 				FB8A3E91BBF30486C917359D /* CustomUrgencyConfigTests.swift in Sources */,
 				829ADC6FC07ADE380C73ECCB /* NotificationServiceTests.swift in Sources */,
-				098582D18436798AC9F0A67B /* RemindlyTests.swift in Sources */,
 				319FD533AE1CDC10CB5FE4D3 /* UrgencyLevelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

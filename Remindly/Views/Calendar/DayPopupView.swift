@@ -5,14 +5,17 @@ struct DayPopupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var settings: AppSettings
-    @Query(sort: \Reminder.date) private var allReminders: [Reminder]
-
+    @Query private var reminders: [Reminder]
     let date: Date
     @State private var showingQuickAdd = false
     @State private var editingReminder: Reminder? = nil
 
-    private var reminders: [Reminder] {
-        allReminders.filter { DateHelpers.isSameDay($0.date, date) }
+    init(date: Date) {
+        self.date = date
+        let cal = Calendar.current
+        let start = cal.startOfDay(for: date)
+        let end = cal.date(byAdding: .day, value: 1, to: start)!
+        _reminders = Query(filter: #Predicate<Reminder> { $0.date >= start && $0.date < end }, sort: \.date)
     }
 
     var body: some View {
@@ -23,19 +26,7 @@ struct DayPopupView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(reminders) { reminder in
-                        HStack(spacing: 10) {
-                            Circle()
-                                .fill(settings.color(for: reminder.urgency))
-                                .frame(width: 8, height: 8)
-                            Text(reminder.title)
-                            Spacer()
-                            Text(reminder.date.formatted(date: .omitted, time: .shortened))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
+                        ReminderRowView(reminder: reminder)
                         .contentShape(Rectangle())
                         .onTapGesture { editingReminder = reminder }
                         .swipeActions(edge: .trailing) {

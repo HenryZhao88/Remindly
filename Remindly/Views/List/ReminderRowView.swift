@@ -9,6 +9,7 @@ struct ReminderRowView: View {
             Circle()
                 .fill(settings.color(for: reminder.urgency))
                 .frame(width: 10, height: 10)
+                .accessibilityLabel("Urgency color: \(reminder.urgency.rawValue)")
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(reminder.title)

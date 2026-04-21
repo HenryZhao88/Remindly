@@ -23,10 +23,13 @@ final class Reminder {
 
     var customConfig: CustomUrgencyConfig {
         get {
-            guard let data = customConfigData,
-                  let config = try? JSONDecoder().decode(CustomUrgencyConfig.self, from: data)
-            else { return CustomUrgencyConfig() }
-            return config
+            guard let data = customConfigData else { return CustomUrgencyConfig() }
+            do {
+                return try JSONDecoder().decode(CustomUrgencyConfig.self, from: data)
+            } catch {
+                assertionFailure("Failed to decode CustomUrgencyConfig: \(error). A decode regression will silently disable spam for all custom reminders.")
+                return CustomUrgencyConfig()
+            }
         }
         set {
             // CustomUrgencyConfig only contains Bool fields so encoding cannot fail.
@@ -42,5 +45,29 @@ final class Reminder {
         self.isSpamming = false
         self.hasBeenStopped = false
         self.notes = notes
+    }
+
+    func shouldStartSpammingNow(using clock: () -> Date = Date.init) -> Bool {
+        guard !hasBeenStopped else { return false }
+        let needsSpam = urgency == .high || (urgency == .custom && customConfig.spamAtEventTime)
+        return needsSpam && date <= clock()
+    }
+}
+
+enum SchemaV1: VersionedSchema {
+    static var versionIdentifier = Schema.Version(1, 0, 0)
+    
+    static var models: [any PersistentModel.Type] {
+        [Reminder.self]
+    }
+}
+
+enum RemindlyMigrationPlan: SchemaMigrationPlan {
+    static var schemas: [any VersionedSchema.Type] {
+        [SchemaV1.self]
+    }
+    
+    static var stages: [MigrationStage] {
+        [] // Add future migration stages here
     }
 }

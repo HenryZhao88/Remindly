@@ -34,25 +34,25 @@ final class MockNotificationCenter: NotificationScheduling {
 final class NotificationServiceTests: XCTestCase {
     var mock: MockNotificationCenter!
     var service: NotificationService!
+    var stubbedDate = Date(timeIntervalSince1970: 100000)
 
     override func setUp() {
         super.setUp()
         mock = MockNotificationCenter()
-        service = NotificationService(center: mock)
+        service = NotificationService(center: mock, clock: { [weak self] in self?.stubbedDate ?? Date() })
         // Disable BGTaskScheduler in tests to avoid unregistered-identifier assertion.
         service.backgroundRefreshScheduler = {}
     }
 
     // 7200s ensures the low-urgency -3600s offset resolves to a future date with safe margin during tests
     func makeReminder(urgency: UrgencyLevel, secondsFromNow: TimeInterval = 7200) -> Reminder {
-        Reminder(title: "Test", date: Date().addingTimeInterval(secondsFromNow), urgency: urgency)
+        Reminder(title: "Test", date: stubbedDate.addingTimeInterval(secondsFromNow), urgency: urgency)
     }
 
     func test_none_schedules_one_notification() {
         let reminder = makeReminder(urgency: .none)
-        service.scheduleNotifications(for: reminder)
         let exp = expectation(description: "scheduled")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        service.scheduleNotifications(for: reminder) {
             XCTAssertEqual(self.mock.addedRequests.count, 1)
             exp.fulfill()
         }
@@ -61,9 +61,8 @@ final class NotificationServiceTests: XCTestCase {
 
     func test_low_schedules_two_notifications() {
         let reminder = makeReminder(urgency: .low)
-        service.scheduleNotifications(for: reminder)
         let exp = expectation(description: "scheduled")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        service.scheduleNotifications(for: reminder) {
             XCTAssertEqual(self.mock.addedRequests.count, 2)
             exp.fulfill()
         }
@@ -72,9 +71,8 @@ final class NotificationServiceTests: XCTestCase {
 
     func test_meeting_schedules_three_notifications() {
         let reminder = makeReminder(urgency: .meeting)
-        service.scheduleNotifications(for: reminder)
         let exp = expectation(description: "scheduled")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        service.scheduleNotifications(for: reminder) {
             XCTAssertEqual(self.mock.addedRequests.count, 3)
             exp.fulfill()
         }
@@ -83,9 +81,8 @@ final class NotificationServiceTests: XCTestCase {
 
     func test_high_schedules_spam_burst() {
         let reminder = makeReminder(urgency: .high)
-        service.scheduleNotifications(for: reminder)
         let exp = expectation(description: "scheduled")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        service.scheduleNotifications(for: reminder) {
             XCTAssertEqual(self.mock.addedRequests.count, NotificationService.spamBurstCount)
             exp.fulfill()
         }
@@ -94,9 +91,8 @@ final class NotificationServiceTests: XCTestCase {
 
     func test_notification_identifiers_use_reminder_id_as_prefix() {
         let reminder = makeReminder(urgency: .none)
-        service.scheduleNotifications(for: reminder)
         let exp = expectation(description: "scheduled")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        service.scheduleNotifications(for: reminder) {
             XCTAssertTrue(self.mock.addedRequests.allSatisfy {
                 $0.identifier.hasPrefix(reminder.id.uuidString)
             })
@@ -107,17 +103,19 @@ final class NotificationServiceTests: XCTestCase {
 
     func test_cancel_removes_pending_by_prefix() {
         let reminder = makeReminder(urgency: .none)
-        service.scheduleNotifications(for: reminder)
-        let exp = expectation(description: "cancelled")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.service.cancelNotifications(for: reminder)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                let removed = self.mock.removedPrefixes
-                XCTAssertTrue(removed.contains(where: { $0.hasPrefix(reminder.id.uuidString) }))
-                exp.fulfill()
-            }
+        let expSchedule = expectation(description: "scheduled")
+        service.scheduleNotifications(for: reminder) {
+            expSchedule.fulfill()
         }
-        wait(for: [exp], timeout: 2)
+        wait(for: [expSchedule], timeout: 1)
+
+        let expCancel = expectation(description: "cancelled")
+        service.cancelNotifications(for: reminder) {
+            let removed = self.mock.removedPrefixes
+            XCTAssertTrue(removed.contains(where: { $0.hasPrefix(reminder.id.uuidString) }))
+            expCancel.fulfill()
+        }
+        wait(for: [expCancel], timeout: 1)
     }
 
     func test_custom_with_15min_schedules_two_notifications() {
@@ -125,11 +123,48 @@ final class NotificationServiceTests: XCTestCase {
         var config = CustomUrgencyConfig()
         config.notify15min = true
         reminder.customConfig = config
-        service.scheduleNotifications(for: reminder)
         let exp = expectation(description: "scheduled")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            // 15 min before + at event time = 2
+        service.scheduleNotifications(for: reminder) {
             XCTAssertEqual(self.mock.addedRequests.count, 2)
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1)
+    }
+
+    // MARK: - New Tests
+
+    func test_spam_auto_expiration() {
+        let reminder = makeReminder(urgency: .high)
+        reminder.isSpamming = true
+        // Set clock to past the max spam duration
+        stubbedDate = reminder.date.addingTimeInterval(NotificationService.maxSpamDuration + 1)
+        
+        service.rescheduleSpamIfNeeded(for: reminder)
+        // Ensure that it dispatches the state change to false on main thread correctly.
+        let exp = expectation(description: "waited for async")
+        DispatchQueue.main.async {
+            XCTAssertFalse(reminder.isSpamming)
+            XCTAssertTrue(reminder.hasBeenStopped)
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1)
+    }
+
+    func test_past_due_reminders_dont_schedule_in_past() {
+        let reminder = makeReminder(urgency: .meeting, secondsFromNow: -10000)
+        let exp = expectation(description: "scheduled")
+        service.scheduleNotifications(for: reminder) {
+            XCTAssertEqual(self.mock.addedRequests.count, 0)
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1)
+    }
+
+    func test_auth_denied_path() {
+        mock.authorizationGranted = false
+        let exp = expectation(description: "auth")
+        service.requestAuthorization { granted in
+            XCTAssertFalse(granted)
             exp.fulfill()
         }
         wait(for: [exp], timeout: 1)

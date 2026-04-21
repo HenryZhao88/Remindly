@@ -7,9 +7,12 @@ final class NotificationService {
     static let spamBurstCount = 60
 
     private let center: NotificationScheduling
+    var clock: () -> Date
 
-    init(center: NotificationScheduling = UNUserNotificationCenter.current()) {
+    init(center: NotificationScheduling = UNUserNotificationCenter.current(),
+         clock: @escaping () -> Date = Date.init) {
         self.center = center
+        self.clock = clock
     }
 
     // MARK: - Permissions
@@ -25,9 +28,10 @@ final class NotificationService {
 
     // MARK: - Schedule
 
-    func scheduleNotifications(for reminder: Reminder) {
+    func scheduleNotifications(for reminder: Reminder, completion: (() -> Void)? = nil) {
         cancelNotifications(for: reminder) {
             self.doSchedule(reminder)
+            completion?()
         }
     }
 
@@ -71,11 +75,12 @@ final class NotificationService {
 
     // MARK: - Reschedule spam (called when app becomes active and reminder.isSpamming == true)
 
+    @MainActor
     func rescheduleSpamIfNeeded(for reminder: Reminder) {
         guard reminder.isSpamming else { return }
 
         // Bug 5 fix: auto-expire spam after maxSpamDuration
-        if Date().timeIntervalSince(reminder.date) > Self.maxSpamDuration {
+        if clock().timeIntervalSince(reminder.date) > Self.maxSpamDuration {
             DispatchQueue.main.async {
                 reminder.isSpamming = false
                 reminder.hasBeenStopped = true
@@ -104,7 +109,7 @@ final class NotificationService {
             override()
             return
         }
-        let request = BGAppRefreshTaskRequest(identifier: "com.henremindlyry.app.spamRefresh")
+        let request = BGAppRefreshTaskRequest(identifier: "com.remindly.app.spamRefresh")
         request.earliestBeginDate = Date(timeIntervalSinceNow: 50)
         try? BGTaskScheduler.shared.submit(request)
     }
@@ -113,7 +118,7 @@ final class NotificationService {
 
     private func addSingleNotification(reminder: Reminder, offset: TimeInterval) {
         let fireDate = reminder.date.addingTimeInterval(offset)
-        guard fireDate > Date() else { return }
+        guard fireDate > clock() else { return }
 
         let content = UNMutableNotificationContent()
         content.title = reminder.title
@@ -127,7 +132,11 @@ final class NotificationService {
             [.year, .month, .day, .hour, .minute, .second], from: fireDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         let id = "\(reminder.id.uuidString)-\(Int(offset))"
-        center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger), withCompletionHandler: nil)
+        center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger)) { error in
+            if let error = error {
+                print("Failed to schedule single notification: \(error)")
+            }
+        }
     }
 
     /// Interval in seconds between each spam notification. Must be > 1 to avoid
@@ -135,12 +144,13 @@ final class NotificationService {
     private static let spamInterval: TimeInterval = 5
 
     private func addSpamBurst(reminder: Reminder, startOffset: Int) {
-        let baseDate = max(Date(), reminder.date)
+        let baseDate = max(clock(), reminder.date)
 
         for i in 0..<Self.spamBurstCount {
             // Space each notification by spamInterval seconds so iOS plays sound/vibration for each one
             let fireDate = baseDate.addingTimeInterval(TimeInterval(startOffset) + TimeInterval(i) * Self.spamInterval)
-            guard fireDate > Date() else { continue }
+            guard fireDate > clock() else { continue }
+            guard fireDate <= reminder.date.addingTimeInterval(Self.maxSpamDuration) else { break }
 
             // Each notification needs its own content object to avoid iOS deduplication
             let content = UNMutableNotificationContent()
@@ -154,7 +164,11 @@ final class NotificationService {
                 [.year, .month, .day, .hour, .minute, .second], from: fireDate)
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             let id = "\(reminder.id.uuidString)-spam-\(i)-\(startOffset)"
-            center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger), withCompletionHandler: nil)
+            center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger)) { error in
+                if let error = error {
+                    print("Failed to schedule spam notification: \(error)")
+                }
+            }
         }
     }
 }

@@ -36,17 +36,17 @@ struct DayCellView: View {
             let overflow = reminders.count - visible.count
             ForEach(visible) { reminder in
                 Text(reminder.title)
-                    .font(.system(size: 7, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .lineLimit(1)
                     .padding(.horizontal, 3)
                     .padding(.vertical, 1)
-                    .background(settings.color(for: reminder.urgency))
-                    .foregroundStyle(.white)
+                    .background(settings.color(for: reminder.urgency).opacity(0.2))
+                    .foregroundStyle(settings.color(for: reminder.urgency))
                     .clipShape(RoundedRectangle(cornerRadius: 3))
             }
             if overflow > 0 {
                 Text("+\(overflow) more")
-                    .font(.system(size: 7))
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)

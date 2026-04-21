@@ -7,17 +7,27 @@ import BackgroundTasks
 struct RemindlyApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var settings = AppSettings()
+    
+    var sharedModelContainer: ModelContainer = {
+        let schema = Schema(versionedSchema: SchemaV1.self)
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        do {
+            return try ModelContainer(for: schema, migrationPlan: RemindlyMigrationPlan.self, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }()
+
+    init() {
+        appDelegate.notificationDelegate.modelContext = sharedModelContainer.mainContext
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(settings)
         }
-        .modelContainer(for: Reminder.self) { result in
-            if case .success(let container) = result {
-                appDelegate.notificationDelegate.modelContext = container.mainContext
-            }
-        }
+        .modelContainer(sharedModelContainer)
     }
 }
 
@@ -28,6 +38,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        NotificationService.shared.requestAuthorization { _ in }
+        
         // Register notification category with Stop action for high-urgency spam
         let stopAction = UNNotificationAction(
             identifier: "STOP_SPAM",
@@ -43,7 +55,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Register background refresh task
         BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "com.henremindlyry.app.spamRefresh",
+            forTaskWithIdentifier: "com.remindly.app.spamRefresh",
             using: nil) { task in
                 self.handleSpamRefresh(task: task as! BGAppRefreshTask)
             }
@@ -62,8 +74,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
             var scheduledAny = false
             for reminder in allReminders {
-                let needsSpam = reminder.urgency == .high || (reminder.urgency == .custom && reminder.customConfig.spamAtEventTime)
-                if needsSpam && reminder.date <= now && !reminder.hasBeenStopped {
+                if reminder.shouldStartSpammingNow(using: { now }) {
                     // Bug 5 fix: auto-expire spam after maxSpamDuration
                     if now.timeIntervalSince(reminder.date) > NotificationService.maxSpamDuration {
                         reminder.isSpamming = false

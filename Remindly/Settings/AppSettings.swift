@@ -15,16 +15,15 @@ final class AppSettings: ObservableObject {
 
     func color(for urgency: UrgencyLevel) -> Color {
         switch urgency {
-        case .none:    return Color(hex: colorNone)
-        case .low:     return Color(hex: colorLow)
-        case .meeting: return Color(hex: colorMeeting)
-        case .high:    return Color(hex: colorHigh)
-        case .custom:  return Color(hex: colorCustom)
+        case .none:    return Color(hex: colorNone) ?? Color(hex: UrgencyLevel.none.defaultHex)!
+        case .low:     return Color(hex: colorLow) ?? Color(hex: UrgencyLevel.low.defaultHex)!
+        case .meeting: return Color(hex: colorMeeting) ?? Color(hex: UrgencyLevel.meeting.defaultHex)!
+        case .high:    return Color(hex: colorHigh) ?? Color(hex: UrgencyLevel.high.defaultHex)!
+        case .custom:  return Color(hex: colorCustom) ?? Color(hex: UrgencyLevel.custom.defaultHex)!
         }
     }
 
     func setColor(_ color: Color, for urgency: UrgencyLevel) {
-        objectWillChange.send()
         let hex = color.toHex()
         switch urgency {
         case .none:    colorNone    = hex

@@ -5,8 +5,6 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var settings: AppSettings
     @Query(filter: #Predicate<Reminder> { $0.isSpamming }) private var spammingReminders: [Reminder]
-    @State private var showingActiveAlerts = false
-
     var body: some View {
         TabView {
             CalendarTabView()
@@ -22,15 +20,6 @@ struct ContentView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .spamBanner()
-        .sheet(isPresented: $showingActiveAlerts) {
-            ActiveAlertsView()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .showActiveAlerts)) { _ in
-            showingActiveAlerts = true
-        }
-        .onAppear {
-            NotificationService.shared.requestAuthorization { _ in }
-        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 for reminder in spammingReminders {

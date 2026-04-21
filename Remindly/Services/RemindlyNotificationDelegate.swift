@@ -17,9 +17,7 @@ final class RemindlyNotificationDelegate: NSObject, UNUserNotificationCenterDele
                                  didReceive response: UNNotificationResponse,
                                  withCompletionHandler completionHandler: @escaping () -> Void) {
         let identifier = response.notification.request.identifier
-        let uuidString = identifier.components(separatedBy: "-spam-").first?
-                                   .components(separatedBy: "-").prefix(5)
-                                   .joined(separator: "-") ?? ""
+        let uuidString = String(identifier.prefix(36))
         let isStopAction = response.actionIdentifier == "STOP_SPAM"
         let isSpamNotification = identifier.contains("-spam-")
 
