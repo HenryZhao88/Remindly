@@ -26,6 +26,7 @@ struct RemindlyApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(settings)
+                .preferredColorScheme(settings.appearanceMode.colorScheme)
         }
         .modelContainer(sharedModelContainer)
     }
@@ -55,7 +56,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Register background refresh task
         BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "com.remindly.app.spamRefresh",
+            forTaskWithIdentifier: NotificationService.backgroundTaskIdentifier,
             using: nil) { task in
                 self.handleSpamRefresh(task: task as! BGAppRefreshTask)
             }
@@ -79,9 +80,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                     if now.timeIntervalSince(reminder.date) > NotificationService.maxSpamDuration {
                         reminder.isSpamming = false
                         reminder.hasBeenStopped = true
+                        try? context.save()
                         continue
                     }
                     reminder.isSpamming = true
+                    try? context.save()
                     NotificationService.shared.rescheduleSpamIfNeeded(for: reminder)
                     scheduledAny = true
                 }

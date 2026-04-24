@@ -4,7 +4,6 @@ import SwiftData
 struct DayPopupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var settings: AppSettings
     @Query private var reminders: [Reminder]
     let date: Date
     @State private var showingQuickAdd = false
@@ -65,5 +64,6 @@ struct DayPopupView: View {
     private func deleteReminder(_ reminder: Reminder) {
         NotificationService.shared.cancelNotifications(for: reminder)
         modelContext.delete(reminder)
+        try? modelContext.save()
     }
 }

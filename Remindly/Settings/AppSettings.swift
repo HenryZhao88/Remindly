@@ -1,7 +1,32 @@
 import SwiftUI
 
+enum AppearanceMode: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+}
+
 final class AppSettings: ObservableObject {
     @AppStorage("calendarViewMode") private var calendarViewModeRaw: String = CalendarViewMode.month.rawValue
+    @AppStorage("appearanceMode") private var appearanceModeRaw: String = AppearanceMode.system.rawValue
     @AppStorage("color_None")    var colorNone:    String = UrgencyLevel.none.defaultHex
     @AppStorage("color_Low")     var colorLow:     String = UrgencyLevel.low.defaultHex
     @AppStorage("color_Meeting") var colorMeeting: String = UrgencyLevel.meeting.defaultHex
@@ -10,7 +35,18 @@ final class AppSettings: ObservableObject {
 
     var calendarViewMode: CalendarViewMode {
         get { CalendarViewMode(rawValue: calendarViewModeRaw) ?? .month }
-        set { calendarViewModeRaw = newValue.rawValue }
+        set {
+            objectWillChange.send()
+            calendarViewModeRaw = newValue.rawValue
+        }
+    }
+
+    var appearanceMode: AppearanceMode {
+        get { AppearanceMode(rawValue: appearanceModeRaw) ?? .system }
+        set {
+            objectWillChange.send()
+            appearanceModeRaw = newValue.rawValue
+        }
     }
 
     func color(for urgency: UrgencyLevel) -> Color {
@@ -25,6 +61,7 @@ final class AppSettings: ObservableObject {
 
     func setColor(_ color: Color, for urgency: UrgencyLevel) {
         let hex = color.toHex()
+        objectWillChange.send()
         switch urgency {
         case .none:    colorNone    = hex
         case .low:     colorLow     = hex

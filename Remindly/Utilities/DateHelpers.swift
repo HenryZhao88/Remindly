@@ -25,6 +25,13 @@ enum DateHelpers {
         return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: startOfWeek) }
     }
 
+    static func shortWeekdaySymbols() -> [String] {
+        let cal = Calendar.current
+        let symbols = cal.veryShortStandaloneWeekdaySymbols
+        let startIndex = cal.firstWeekday - 1
+        return Array(symbols[startIndex...] + symbols[..<startIndex])
+    }
+
     static func isSameDay(_ a: Date, _ b: Date) -> Bool {
         Calendar.current.isDate(a, inSameDayAs: b)
     }

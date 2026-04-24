@@ -3,7 +3,6 @@ import SwiftData
 
 struct ReminderFormView: View {
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var settings: AppSettings
     @Environment(\.dismiss) private var dismiss
 
     /// Non-nil when editing an existing reminder.
@@ -115,6 +114,7 @@ struct ReminderFormView: View {
             if r.shouldStartSpammingNow() {
                 r.isSpamming = true
             }
+            try? modelContext.save()
 
             if self.onSave == nil {
                 self.resetForm()
@@ -135,6 +135,7 @@ struct ReminderFormView: View {
             if reminder.shouldStartSpammingNow() {
                 reminder.isSpamming = true
             }
+            try? modelContext.save()
 
             if onSave == nil {
                 resetForm()
@@ -150,6 +151,7 @@ struct ReminderFormView: View {
         // so the async completion is safe even after the model object is removed.
         NotificationService.shared.cancelNotifications(for: r)
         modelContext.delete(r)
+        try? modelContext.save()
         if onSave != nil {
             onSave?()
         } else {

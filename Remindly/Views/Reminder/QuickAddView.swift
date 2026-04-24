@@ -5,7 +5,6 @@ import SwiftData
 struct QuickAddView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var settings: AppSettings
 
     let prefilledDate: Date
 
@@ -50,6 +49,7 @@ struct QuickAddView: View {
                     if reminder.shouldStartSpammingNow() {
                         reminder.isSpamming = true
                     }
+                    try? modelContext.save()
 
                     dismiss()
                 }

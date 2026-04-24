@@ -46,6 +46,7 @@ struct ActiveAlertsView: View {
     private func stop(_ reminder: Reminder) {
         reminder.isSpamming = false
         reminder.hasBeenStopped = true
+        try? modelContext.save()
         NotificationService.shared.cancelNotifications(for: reminder)
     }
 }

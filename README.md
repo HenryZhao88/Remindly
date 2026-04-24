@@ -5,7 +5,7 @@
 ## Features
 
 - **Urgency Levels**: Categorize reminders by urgency (`None`, `Low`, `Meeting`, `High`, and `Custom`). 
-- **High-Urgency Spam Notifications**: For critical reminders (`High` urgency or `Custom` with spam enabled), the app will send continuous burst notifications (one per second) to guarantee you notice them.
+- **High-Urgency Spam Notifications**: For critical reminders (`High` urgency or `Custom` with spam enabled), the app will send repeated burst notifications every 5 seconds to guarantee you notice them.
 - **Custom Urgency Configurations**: Tailor exactly how and when you want to be notified by setting custom lead-time offsets and spam behaviors.
 - **Persistent Background Tasks**: Uses Apple's `BackgroundTasks` API to keep notifications firing reliably in the background until dismissed.
 - **Calendar & List Views**: Offers comprehensive views to check your schedule at a glance (Calendar mode) or manage tasks chronologically (List mode).
@@ -32,7 +32,7 @@
 
 ## Setup & Installation
 
-This project uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to manage its project file. You will not find a `.xcodeproj` committed to the repository. 
+This project uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to manage its project file. The checked-in `.xcodeproj` can be opened directly, or regenerated from `project.yml`.
 
 1. Ensure XcodeGen is installed:
    ```bash
@@ -50,4 +50,4 @@ When run for the first time, Remindly will ask for Notification permissions. The
 
 ## Background Activity
 
-Remindly utilizes `BGAppRefreshTask` (`com.henremindlyry.app.spamRefresh`) to wake up the app and schedule more notifications if a high-urgency reminder occurs. In testing, please use a physical device, as background background task execution behaves differently on the iOS Simulator.
+Remindly utilizes `BGAppRefreshTask` (`com.henremindlyry.app.spamRefresh`) to wake up the app and schedule more notifications if a high-urgency reminder occurs. In testing, please use a physical device, as background task execution behaves differently on the iOS Simulator.

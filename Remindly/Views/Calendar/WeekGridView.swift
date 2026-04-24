@@ -8,9 +8,12 @@ struct WeekGridView: View {
     @State private var anchorDate: Date = Date()
 
     private var weekDays: [Date] { DateHelpers.weekDays(for: anchorDate) }
+    private var remindersByDay: [Date: [Reminder]] {
+        Dictionary(grouping: reminders) { Calendar.current.startOfDay(for: $0.date) }
+    }
 
     private func remindersOnDay(_ date: Date) -> [Reminder] {
-        reminders.filter { DateHelpers.isSameDay($0.date, date) }
+        remindersByDay[Calendar.current.startOfDay(for: date)] ?? []
     }
 
     var body: some View {

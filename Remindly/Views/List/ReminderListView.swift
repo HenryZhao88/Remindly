@@ -101,5 +101,6 @@ struct ReminderListView: View {
     private func delete(_ reminder: Reminder) {
         NotificationService.shared.cancelNotifications(for: reminder)
         modelContext.delete(reminder)
+        try? modelContext.save()
     }
 }

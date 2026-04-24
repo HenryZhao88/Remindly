@@ -133,6 +133,7 @@ final class NotificationServiceTests: XCTestCase {
 
     // MARK: - New Tests
 
+    @MainActor
     func test_spam_auto_expiration() {
         let reminder = makeReminder(urgency: .high)
         reminder.isSpamming = true

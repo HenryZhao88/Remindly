@@ -3,6 +3,7 @@ import BackgroundTasks
 
 final class NotificationService {
     static let shared = NotificationService()
+    static let backgroundTaskIdentifier = "com.henremindlyry.app.spamRefresh"
     /// Number of notifications scheduled per spam burst (spaced 5 seconds apart).
     static let spamBurstCount = 60
 
@@ -43,7 +44,7 @@ final class NotificationService {
             }
         case .high:
             addSpamBurst(reminder: reminder, startOffset: 0)
-            scheduleBackgroundRefresh()
+            scheduleBackgroundRefresh(for: reminder)
         case .custom:
             let config = reminder.customConfig
             for offset in config.leadOffsets where offset != 0 {
@@ -51,7 +52,7 @@ final class NotificationService {
             }
             if config.spamAtEventTime {
                 addSpamBurst(reminder: reminder, startOffset: 0)
-                scheduleBackgroundRefresh()
+                scheduleBackgroundRefresh(for: reminder)
             } else {
                 addSingleNotification(reminder: reminder, offset: 0)
             }
@@ -95,6 +96,7 @@ final class NotificationService {
             }
             if spamPending.count < 10 {
                 self.addSpamBurst(reminder: reminder, startOffset: 1 as Int)
+                self.scheduleBackgroundRefresh(for: reminder)
             }
         }
     }
@@ -105,12 +107,21 @@ final class NotificationService {
     var backgroundRefreshScheduler: (() -> Void)?
 
     func scheduleBackgroundRefresh() {
+        scheduleBackgroundRefresh(earliestBeginDate: Date(timeIntervalSinceNow: 50))
+    }
+
+    func scheduleBackgroundRefresh(for reminder: Reminder) {
+        let nextRefreshDate = max(clock().addingTimeInterval(50), reminder.date.addingTimeInterval(50))
+        scheduleBackgroundRefresh(earliestBeginDate: nextRefreshDate)
+    }
+
+    private func scheduleBackgroundRefresh(earliestBeginDate: Date) {
         if let override = backgroundRefreshScheduler {
             override()
             return
         }
-        let request = BGAppRefreshTaskRequest(identifier: "com.remindly.app.spamRefresh")
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 50)
+        let request = BGAppRefreshTaskRequest(identifier: Self.backgroundTaskIdentifier)
+        request.earliestBeginDate = earliestBeginDate
         try? BGTaskScheduler.shared.submit(request)
     }
 

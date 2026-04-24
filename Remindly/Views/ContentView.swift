@@ -3,7 +3,6 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
-    @EnvironmentObject private var settings: AppSettings
     @Query(filter: #Predicate<Reminder> { $0.isSpamming }) private var spammingReminders: [Reminder]
     var body: some View {
         TabView {

@@ -7,10 +7,13 @@ struct MonthGridView: View {
     @State private var displayedMonth: Date = Calendar.current.startOfMonth(for: Date())
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 1), count: 7)
-    private let dayHeaders = ["S", "M", "T", "W", "T", "F", "S"]
+    private var dayHeaders: [String] { DateHelpers.shortWeekdaySymbols() }
+    private var remindersByDay: [Date: [Reminder]] {
+        Dictionary(grouping: reminders) { Calendar.current.startOfDay(for: $0.date) }
+    }
 
     private func remindersOnDay(_ date: Date) -> [Reminder] {
-        reminders.filter { DateHelpers.isSameDay($0.date, date) }
+        remindersByDay[Calendar.current.startOfDay(for: date)] ?? []
     }
 
     var body: some View {
@@ -33,7 +36,7 @@ struct MonthGridView: View {
 
             // Day-of-week headers
             LazyVGrid(columns: columns, spacing: 1) {
-                ForEach(dayHeaders, id: \.self) { h in
+                ForEach(Array(dayHeaders.enumerated()), id: \.offset) { _, h in
                     Text(h)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.secondary)
